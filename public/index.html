@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Crafting Profit</title>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+	<link rel="stylesheet" type="text/css" href="font-awesome.min.css">
+	<style type="text/css" media="screen">
+		* {
+			transition: border 0.2s;
+		}
+		code {
+			white-space: pre-wrap;
+			display: block;  
+			height: 84%;
+			overflow: auto;
+		}
+		code strong {
+			color: #af2b2b;
+		}
+		.header {
+			height: 31.38rem;
+		}
+		.header div {
+			height: inherit;
+		}
+		th {
+			border-bottom: 0.2rem #fff solid;
+		}
+		th.sortable:hover {
+			border-bottom: 0.2rem #333 solid;
+			cursor: pointer;
+		}
+		tr {
+			transition: background-color 0.2s;
+		}
+		tbody tr:hover {
+			background-color: #ddd;
+			cursor: pointer;
+		}
+		table {
+			font-size: 1.2rem;
+		}
+		td, th {
+			padding: 7px 5px;
+		}
+		.ascended {
+			color: #fb3e8d;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<div class="container">
+			<div class="row header">
+				<div class="three columns">
+					<button @click="getItems" class="u-full-width">Get New Items</button>
+					<button @click="updateSoldBought" class="u-full-width">Update Sold/Bought</button>
+					<button @click="updateProfitSBPR" class="u-full-width">Update Profit/SBPR</button>
+					<button @click="updateSortedData" class="u-full-width">Update Sorted Data</button>
+					<label class="u-full-width">Starting with page <input v-model="startPage" type="number" style="width: 7.7rem; position: relative; right: 0px;"></label>
+					<label class="u-full-width">Ending with page <input v-model="endPage" type="number" style="width: 8.25rem; position: relative; right: 0px;"></label>
+				</div>
+				<div class="nine columns">
+					<strong>Console<br></strong>
+					<code class="u-max-full-width" v-html="logData"></code>
+				</div>
+			</div>
+			<div class="row">
+				<br>
+				<table class="u-full-width">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th @click="sortBySBPR" class="sortable">SBPR&nbsp;<i class="fa fa-sort-amount-desc" aria-hidden="true"></i></th>
+							<th @click="sortByProfit" class="sortable">CrProfit&nbsp;<i class="fa fa-sort-amount-desc" aria-hidden="true"></i></th>
+							<th>FlProfit</th>							
+							<th @click="sortBySold" class="sortable">Sold&nbsp;<i class="fa fa-sort-amount-desc" aria-hidden="true"></i></th>
+							<th @click="sortByBought" class="sortable">Bought&nbsp;<i class="fa fa-sort-amount-desc" aria-hidden="true"></i></th>
+							<th>Sell</th>
+							<th>Buy</th>
+							<th>SPrice</th>										
+							<th>BPrice</th>						
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="item in sortedData" @click="goToGW2Efficiency(item, $event)" :class="[item.rarity === 6 ? ascended : usual]">
+							<td>{{ item.name }}</td>
+							<td>{{ Math.round(item.sbpr) }}</td>
+							<td>{{ beautifyGold(item.craftingProfit) }}</td>		
+							<td>{{ beautifyGold(Math.round((item.sell.price - item.buy.price) * 0.85)) }}</td>		
+							<td>{{ item.sold }}</td>
+							<td>{{ item.bought }}</td>
+							<td>{{ item.sell.quantity }}</td>		
+							<td>{{ item.buy.quantity }}</td>		
+							<td>{{ beautifyGold(item.sell.price) }}</td>										
+							<td>{{ beautifyGold(item.buy.price) }}</td>					
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.2/vue.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+	<script>
+		var socket = io('http://localhost:3000');
+		var app = new Vue({
+		  el: '#app',
+		  data: {
+		  	startPage: 0,
+		  	endPage: 41,
+		  	logData: '',
+		  	sortedByProfit: [],
+		  	sortedBySold: [],
+		  	sortedByBought: [],
+		  	sortedBySBPR: [],
+		  	sortedData: [],
+		  	ascended: 'ascended',
+		  	usual: ''
+		  },
+		  methods: {
+		  	getItems() {
+		  		axios.post('/get_items', {startPage: this.startPage, endPage: this.endPage})
+		  	},
+		  	updateSoldBought() {
+		  		if (confirm('Are you sure you want to override sold/bought info?')) {
+		  			axios.post('/update_sold_bought', {startPage: this.startPage, endPage: this.endPage})
+		  		}
+		  	},
+		  	updateProfitSBPR() {
+		  		axios.post('/update_profit_sbpr', {startPage: this.startPage, endPage: this.endPage})
+		  	},
+		  	updateSortedData() {
+		  		axios.get('/update_sorted_data')
+		  	},
+		  	scrollToBottom() {
+		  		setTimeout(function() {
+					var elem = document.getElementsByTagName('code')[0]
+			  		elem.scrollTop = elem.scrollHeight;
+				}, 30)
+		  	},
+		  	sortByProfit() {
+		  		this.sortedData = this.sortedByProfit
+		  	},
+		  	sortBySold() {
+		  		this.sortedData = this.sortedBySold
+		  	},
+		  	sortByBought() {
+		  		this.sortedData = this.sortedByBought
+		  	},
+		  	sortBySBPR() {
+		  		this.sortedData = this.sortedBySBPR
+		  	},
+		  	beautifyGold(price) {
+		  		let result = ''
+		  		
+		  		let gold = Number(String.prototype.slice.call(price, 0, -4))
+		  		if (gold) {
+		  			gold += 'g'
+		  			result += gold
+		  		}
+
+		  		let silver = Number(String.prototype.slice.call(price, -4, -2))
+		  		if (silver) {
+		  			silver += 's'
+		  			result += silver
+		  		}
+
+		  		let copper = Number(String.prototype.slice.call(price, -2))
+		  		if (copper) {
+		  			copper += 'c'
+		  			result += copper
+		  		}
+
+		  		return result
+		  	},
+		  	goToGW2Efficiency(item, event) {
+		  		const BASIC_URL = 'https://gw2efficiency.com/crafting/calculator/'
+		  		window.open(BASIC_URL + item.id,'_blank');
+		  	}
+		  },
+		  mounted() {
+		  	socket.on('log', (text) => {
+				this.logData = this.logData + text + '\n'
+				this.scrollToBottom()
+			})
+
+			socket.on('error', (text) => {
+				this.logData = this.logData + '<strong>ERROR: </strong>' + text + '\n'
+				this.scrollToBottom()
+			})
+			
+		  	axios.get('/get_sorted_data')
+			  	.then((res) => {
+				    this.sortedByProfit = res.data.sortedByProfit
+				    this.sortedBySold = res.data.sortedBySold
+				    this.sortedByBought = res.data.sortedByBought
+				    this.sortedBySBPR = res.data.sortedBySbpr
+				    this.sortedData = this.sortedBySBPR
+				})
+				.catch((err) => {
+					console.error(err);
+					this.logData = this.logData + '<strong>ERROR: </strong>' + err + '\n'
+					this.scrollToBottom()
+				})				
+		  }
+		})
+	</script>
+</body>
+</html>
