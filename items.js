@@ -148,7 +148,7 @@ module.exports = items = {
                 item.buy = newItems[index].buy
                 item.sell = newItems[index].sell
 
-                item.sbpr = (item.sold * 3 + item.bought) * item.craftingProfit / 10000
+                item.sbpr = (item.sold * 3 + item.bought * 0.5) * Math.sqrt(item.craftingProfit * 2) / 10000
 
                 if ((index + 1) === array.length) {
                   fs.createWriteStream(`modified_items/modified_items${page}.json`).write(JSON.stringify(array), 'utf-8')
