@@ -1,5 +1,8 @@
 .DS_Store
 node_modules/
+items/
+modified_items/
+sorted_data/
 dist/
 npm-debug.log*
 yarn-debug.log*
