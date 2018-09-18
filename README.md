@@ -22,4 +22,5 @@ Used technologies:
 - Node.js & Express
 - SocketIO
 - Nightmare.js
+- Vue.js
 - SkeletonUI
