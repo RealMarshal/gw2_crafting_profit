@@ -165,13 +165,13 @@ module.exports = items = {
     }
   },
 
-  updateSortedData() {
+  updateSortedData(startPage, endPage) {
 
     console.log('Updating sorted lists...')
 
     this.parseItems(function() {
       getSortedData()
-    }, 0, 22, 'modified_items/modified_items')
+    }, startPage, endPage, 'modified_items/modified_items')
 
     function getSortedData() {
       var mergedItems = []

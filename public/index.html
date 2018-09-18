@@ -133,7 +133,7 @@
 		  		axios.post('/update_profit_sbpr', {startPage: this.startPage, endPage: this.endPage})
 		  	},
 		  	updateSortedData() {
-		  		axios.get('/update_sorted_data')
+		  		axios.post('/update_sorted_data', {startPage: this.startPage, endPage: this.endPage})
 		  	},
 		  	scrollToBottom() {
 		  		setTimeout(function() {

@@ -23,8 +23,8 @@ router.post('/update_profit_sbpr', jsonParser, (req, res) => {
   res.sendStatus(200)
 })
 
-router.get('/update_sorted_data', (req, res) => {
-  items.updateSortedData()
+router.post('/update_sorted_data', jsonParser, (req, res) => {
+  items.updateSortedData(req.body.startPage, req.body.endPage)
   res.sendStatus(200)
 })
 
